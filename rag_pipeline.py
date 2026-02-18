@@ -8,6 +8,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
+from langchain_core.prompts import PromptTemplate
+
 
 load_dotenv()
 
@@ -24,14 +26,15 @@ def load_llm():
 def get_prompt():
     return ChatPromptTemplate.from_messages([
         ("system",
-         """You are a helpful assistant that answers questions using ONLY the provided document context.
+         """You are an intelligent assistant answering questions using ONLY the provided document context.
 
-Rules:
-- Use only the information from the context.
+Guidelines:
+- Base your answer strictly on the retrieved context.
 - If the answer is not in the context, say: "I could not find this information in the document."
-- Do not guess.
-- Think step by step before answering.
-- Provide a detailed explanation in 3-5 paragraphs."""
+- Be clear, structured and concise.
+- Provide unnecessary repitition.
+- If the question is a follow up, use chat history to understand intent.
+- Do not mention the context explicitly in your answer."""
          ),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human",
@@ -52,8 +55,8 @@ def build_retriever(uploaded_pdf_path):
 
     
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1200,
-        chunk_overlap=250
+        chunk_size=800,
+        chunk_overlap=150
     )
     chunks = splitter.split_documents(docs)
 
@@ -69,8 +72,9 @@ def build_retriever(uploaded_pdf_path):
     )
 
     return vector_store.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": 8}
+        search_type="mmr",
+        search_kwargs={"k": 8,
+                       "fetch_k":20}
     )
 
 
@@ -80,20 +84,44 @@ def build_rag_chain(retriever):
     llm = load_llm()
     prompt = get_prompt()
 
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
+    def rag_chain(input_data):
 
-    rag_chain = (
-        {
-            "context": lambda x: format_docs(
-                retriever.invoke(x["question"])
-            ),
-            "question": lambda x: x["question"],
-            "chat_history": lambda x: x["chat_history"],
+        question = input_data["question"]
+        chat_history = input_data["chat_history"]
+
+        # Combine last user question for follow-up handling
+        if chat_history:
+            for msg in reversed(chat_history):
+                if msg.type == "human":
+                    question = msg.content + " " + question
+                    break
+
+        # Retrieve documents
+        docs = retriever.invoke(question)
+
+        formatted_context = "\n\n".join(
+            doc.page_content for doc in docs
+        )
+
+        # Generate answer
+        answer = (
+            prompt
+            | llm
+            | StrOutputParser()
+        ).invoke({
+            "context": formatted_context,
+            "question": input_data["question"],
+            "chat_history": chat_history
+        })
+
+        return {
+            "answer": answer,
+            "docs": docs
         }
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
 
     return rag_chain
+
+         
+        
+    
+ 
