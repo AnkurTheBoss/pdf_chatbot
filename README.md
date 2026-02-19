@@ -1,81 +1,92 @@
-📄 PDF RAG Chatbot (LangChain + Groq)
+📄 PDF RAG Chatbot
+Retrieval-Augmented Generation System with Source Citation
 
-This project is an end-to-end Retrieval-Augmented Generation (RAG) chatbot that allows users to upload a PDF and ask questions about its content.
+An end-to-end Retrieval-Augmented Generation (RAG) application that allows users to upload PDFs and ask context-grounded questions. The system retrieves relevant document chunks using semantic search and generates answers backed by source citations.
 
-Instead of relying purely on a language model, the system retrieves relevant sections from the document and generates answers grounded in the uploaded text.
-
-The goal of this project was to build a production-style GenAI application from scratch — including retrieval logic, vector storage, LLM integration, UI, and deployment readiness.
-
-🚀 What This Project Does
+🚀 Features
 
 Upload any PDF document
 
-Ask natural language questions
+Semantic search using embeddings
 
-Retrieve semantically relevant chunks using embeddings
+MMR-based top-k retrieval (k=8)
 
-Generate context-grounded responses using a hosted LLM
+Chunking (800) with 150 overlap
 
-Maintain conversational memory within a session
+Context-grounded LLM responses
 
-🏗 How It Works
+Source citation with page references
 
-The uploaded PDF is split into overlapping chunks.
+Deployed on Streamlit Cloud
 
-Each chunk is converted into vector embeddings using a lightweight sentence-transformer model.
+🧠 Architecture Overview
 
-The embeddings are stored in a Chroma vector database.
+Pipeline Flow:
 
-When a question is asked, the system retrieves the most relevant chunks.
+PDF ingestion & text extraction
 
-The retrieved context is passed to the LLM (Groq LLaMA 3.1).
+Recursive chunking (size=800, overlap=150)
 
-The model generates a response strictly grounded in the document.
+Embedding generation (HuggingFace)
 
-This approach reduces hallucination and improves answer relevance compared to a standalone LLM.
+Vector storage in ChromaDB
 
-🛠 Tech Stack
+MMR retrieval (Top 8 relevant chunks)
 
-Python
+Context injection into Groq LLM
 
-LangChain
+Answer generation with cited sources
 
-HuggingFace Embeddings (MiniLM)
+⚙️ Tech Stack
 
-ChromaDB
+LLM: Groq
 
-Groq LLM API
+Embeddings: HuggingFace model
 
-Streamlit
+Vector Database: ChromaDB
 
-python-dotenv
+Framework: LangChain
 
-🎯 Why I Built This
+UI: Streamlit
 
-I wanted to move beyond notebook-style ML projects and build something closer to a real-world GenAI system.
+Deployment: Streamlit Cloud
 
-Through this project I:
+🎥 Demo: https://youtu.be/6Bh7FiNFnu0
 
-Designed a modular RAG pipeline
+Watch the Demo Video
 
-Tuned chunk size and overlap for long technical documents
+📌 Key Engineering Decisions
 
-Handled dependency conflicts and environment issues
+Balanced chunk size to optimize precision vs context coherence
 
-Implemented conversational memory
+150 overlap to preserve semantic continuity
 
-Built and structured a deployable application
+MMR retrieval to reduce redundancy in retrieved chunks
 
-▶️ Run Locally
-pip install -r requirements.txt
-streamlit run app.py
+Source-grounded generation to reduce hallucinations
 
-🔮 Possible Improvements
+🔮 Future Improvements
 
-Add reranking to improve retrieval precision
+Confidence scoring mechanism
 
-Implement persistent chat memory
+Hybrid search (BM25 + Vector search)
 
-Add evaluation metrics for grounding accuracy
+Adaptive chunking based on document structure
 
-Benchmark chunking strategies
+Guardrail-based refusal mechanism
+
+📂 Project Structure
+├── app.py
+├── utils/
+├── vector_store/
+├── requirements.txt
+├── README.md
+
+
+(Modify structure according to your actual repo.)
+
+🧑‍💻 Author
+
+Ankur Karmakar
+ML / AI Engineer (Aspiring)
+Open to off-campus opportunities
